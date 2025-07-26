@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | KyuzoSMM Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="bg-gradient-to-br from-[#0e0e24] via-[#1b0140] to-[#0e0e24] text-white min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-6 py-4 backdrop-blur-md bg-white/5 border-b border-purple-700 shadow-md">
+    <div class="flex items-center space-x-3">
+      <img src="logo.png" alt="Logo" class="h-10 w-10 rounded-full shadow-lg" />
+      <span class="text-xl font-semibold text-purple-300 tracking-wider">KyuzoSMM Panel</span>
+    </div>
+    <div class="space-x-6 text-lg font-medium">
+      <a href="/register" class="hover:text-purple-400 transition"><i class="fa fa-user-plus mr-1"></i>Register</a>
+      <a href="/login" class="text-purple-400"><i class="fa fa-sign-in-alt mr-1"></i>Login</a>
+      <a href="/dashboard" class="hover:text-purple-400 transition"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
+      <a href="/support" class="hover:text-purple-400 transition"><i class="fa fa-headset mr-1"></i>Support</a>
+    </div>
+  </nav>
+
+  <!-- Login Form -->
+  <section class="flex items-center justify-center h-[calc(100vh-80px)] px-4">
+    <div class="bg-white/5 backdrop-blur-lg border border-purple-600 rounded-2xl p-8 w-full max-w-md shadow-xl">
+      <h2 class="text-3xl font-bold text-purple-300 mb-6 text-center">Login to your account</h2>
+      <form action="/login" method="POST" class="space-y-5">
+        <div>
+          <label class="block mb-1 text-sm text-purple-200">Username or Email</label>
+          <input type="text" name="username" required class="w-full bg-purple-900/30 border border-purple-700 rounded-lg px-4 py-2 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div>
+          <label class="block mb-1 text-sm text-purple-200">Password</label>
+          <input type="password" name="password" required class="w-full bg-purple-900/30 border border-purple-700 rounded-lg px-4 py-2 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 transition rounded-lg py-2 font-semibold shadow-md">Login</button>
+      </form>
+      <p class="mt-4 text-center text-sm text-purple-300">
+        Don't have an account? <a href="/register" class="text-purple-400 hover:underline">Register here</a>
+      </p>
+    </div>
+  </section>
+
+</body>
+</html>

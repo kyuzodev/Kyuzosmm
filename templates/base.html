@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}KyuzoSMM{% endblock %}</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- Alpine.js -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <style>
+    /* Alpine x-cloak segít eltüntetni a rejtett elemeket renderelés előtt */
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-[#0e0e24] via-[#1b0140] to-[#0e0e24] text-white min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-6 py-4 bg-white/5 backdrop-blur-md border-b border-purple-700 shadow-md">
+    <div class="flex items-center space-x-3">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="h-10 w-10 rounded-full shadow-lg" />
+      <span class="text-xl font-semibold text-purple-300 tracking-wider">KyuzoSMM Panel</span>
+    </div>
+
+    <div class="space-x-6 text-lg font-medium flex items-center">
+      {% if session.get('username') %}
+        <a href="{{ url_for('dashboard') }}" class="text-purple-400 hover:text-purple-300 transition flex items-center">
+          <i class="fa fa-chart-line mr-1"></i>Dashboard
+        </a>
+        <a href="{{ url_for('order') }}" class="hover:text-purple-400 transition flex items-center">
+          <i class="fa fa-shopping-cart mr-1"></i>New Order
+        </a>
+        <a href="{{ url_for('services') }}" class="hover:text-purple-400 transition flex items-center">
+          <i class="fa fa-list mr-1"></i>Services
+        </a>
+        <a href="{{ url_for('support') }}" class="hover:text-purple-400 transition flex items-center">
+          <i class="fa fa-headset mr-1"></i>Support
+        </a>
+        {% if session.get('role') == 'admin' %}
+          <a href="{{ url_for('admin') }}" class="hover:text-purple-400 transition flex items-center">
+            <i class="fa fa-user-shield mr-1"></i>Admin
+          </a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="text-red-400 hover:text-red-500 flex items-center">
+          <i class="fa fa-sign-out-alt mr-1"></i>Logout ({{ session.get('username') }})
+        </a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="hover:text-purple-400 transition flex items-center">
+          <i class="fa fa-sign-in-alt mr-1"></i>Login
+        </a>
+        <a href="{{ url_for('register') }}" class="hover:text-purple-400 transition flex items-center">
+          <i class="fa fa-user-plus mr-1"></i>Register
+        </a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Tartalom -->
+  <main class="px-6 py-10 flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-gray-400 text-sm py-4 border-t border-purple-700 bg-white/5">
+    &copy; 2025 KyuzoSMM Panel. All rights reserved.
+  </footer>
+
+  <!-- DEBUG LOG -->
+  <div style="position:fixed;bottom:0;left:0;right:0;max-height:150px;overflow:auto;background:#000b;color:#0f0;font-family: monospace; font-size:10px; padding:5px; z-index:9999;">
+    <strong>DEBUG LOG:</strong>
+    <pre>
+{% for line in logs %}
+{{ line }}
+{% endfor %}
+    </pre>
+  </div>
+
+</body>
+</html>

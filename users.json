@@ -1,0 +1,17 @@
+{
+    "admin": {
+        "password": "adminpass",
+        "role": "admin",
+        "balance": 0.0
+    },
+    "tesztuser": {
+        "password": "teszt123",
+        "role": "user",
+        "balance": 5.0
+    },
+    "Kyuzo": {
+        "password": "Kiralyod12",
+        "role": "user",
+        "balance": 0
+    }
+}

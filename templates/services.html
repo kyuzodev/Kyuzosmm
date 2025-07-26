@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Services | KyuzoSMM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-[#0e0e24] via-[#1b0140] to-[#0e0e24] text-white min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-6 py-4 bg-white/5 backdrop-blur-md border-b border-purple-700 shadow-md sticky top-0 z-30">
+    <div class="flex items-center space-x-3">
+      <img src="/static/logo.png" alt="Logo" class="h-10 w-10 rounded-full shadow-lg" />
+      <span class="text-xl font-semibold text-purple-300 tracking-wider">KyuzoSMM Panel</span>
+    </div>
+    <div class="space-x-6 text-lg font-medium">
+      <a href="/dashboard" class="hover:text-purple-400 transition"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
+      <a href="/order" class="hover:text-purple-400 transition"><i class="fa fa-shopping-cart mr-1"></i>New Order</a>
+      <a href="/services" class="text-purple-400"><i class="fa fa-list mr-1"></i>Services</a>
+      <a href="/support" class="hover:text-purple-400 transition"><i class="fa fa-headset mr-1"></i>Support</a>
+      <a href="/logout" class="text-red-400 hover:text-red-500"><i class="fa fa-sign-out-alt mr-1"></i>Logout</a>
+    </div>
+  </nav>
+
+  <main class="flex-grow px-6 py-10 max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-purple-300 mb-6">Services</h1>
+
+    <p class="mb-6 text-lg font-semibold text-purple-400">Your balance: <span id="user-balance">{{ balance }}</span> EUR</p>
+
+    <!-- Filter buttons -->
+    <div id="category-filters" class="flex flex-wrap gap-3 mb-8">
+      <button data-category="all" class="filter-btn bg-purple-700 px-4 py-2 rounded-full text-white font-semibold hover:bg-purple-600 transition">All</button>
+      {% for category in categories.keys() %}
+      <button data-category="{{ category }}" class="filter-btn bg-purple-800/70 px-4 py-2 rounded-full text-purple-300 font-semibold hover:bg-purple-600 hover:text-white transition">{{ category }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- Services grid -->
+    <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Service cards will be inserted here by JS -->
+    </div>
+
+    <!-- Load more button -->
+    <div class="mt-8 text-center">
+      <button id="load-more-btn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-semibold text-white transition shadow-lg">
+        Load More
+      </button>
+    </div>
+  </main>
+
+  <script>
+    // Backendból jön a balance változó
+    const userBalance = parseFloat(document.getElementById('user-balance').textContent);
+
+    // Services data from backend, flatten categories for frontend handling
+    const categories = {{ categories|tojson }};
+    // Flatten services into one array with category field
+    let allServices = [];
+    for (const [cat, svcs] of Object.entries(categories)) {
+      svcs.forEach(svc => {
+        svc.category = cat;
+        allServices.push(svc);
+      });
+    }
+
+    // Pagination variables
+    let filteredServices = allServices;
+    let currentPage = 1;
+    const perPage = 9;
+
+    const servicesGrid = document.getElementById('services-grid');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    function renderServices(page = 1) {
+      // Calculate slice for current page
+      const start = (page - 1) * perPage;
+      const end = start + perPage;
+      const pageServices = filteredServices.slice(start, end);
+
+      // Create cards HTML
+      const cardsHtml = pageServices.map(svc => {
+        // 1 EUR hozzáadás minden árhoz
+        const price = (parseFloat(svc.rate) + 1) || 0;
+        const canOrder = userBalance >= price;
+
+        return `
+        <div class="bg-white/10 border border-purple-700 rounded-xl p-5 shadow-lg hover:shadow-purple-500 transition cursor-pointer group relative flex flex-col justify-between">
+          <h2 class="text-lg font-bold text-purple-300 mb-2 group-hover:text-purple-400">${svc.name}</h2>
+          <p class="text-sm text-gray-300 mb-4 line-clamp-3">${svc.desc || 'No description available.'}</p>
+          <div class="mt-auto flex justify-between items-center text-purple-400 font-semibold text-sm mb-3">
+            <span>Min: ${svc.min || '-'}</span>
+            <span>Max: ${svc.max || '-'}</span>
+            <span>Price: ${price.toFixed(2)} EUR</span>
+          </div>
+          <button
+            ${canOrder ? '' : 'disabled'}
+            onclick="orderService('${svc.service_id}', ${price})"
+            class="w-full py-2 rounded bg-purple-600 hover:bg-purple-700 text-white font-semibold transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+            title="${canOrder ? 'Order this service' : 'Insufficient balance'}"
+          >
+            ${canOrder ? 'Order' : 'Not enough balance'}
+          </button>
+          <div class="absolute top-3 right-3 text-xs px-2 py-1 rounded bg-purple-900/70 text-purple-300 font-mono select-none">${svc.category}</div>
+        </div>
+        `;
+      }).join('');
+
+      if (page === 1) {
+        servicesGrid.innerHTML = cardsHtml;
+      } else {
+        servicesGrid.insertAdjacentHTML('beforeend', cardsHtml);
+      }
+
+      // Hide Load More if no more pages
+      if (end >= filteredServices.length) {
+        loadMoreBtn.style.display = 'none';
+      } else {
+        loadMoreBtn.style.display = 'inline-block';
+      }
+    }
+
+    // Initial render
+    renderServices();
+
+    // Filter click handlers
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const category = btn.getAttribute('data-category');
+
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-purple-700', 'text-white');
+          b.classList.add('bg-purple-800/70', 'text-purple-300');
+        });
+        btn.classList.add('bg-purple-700');
+        btn.classList.remove('bg-purple-800/70', 'text-purple-300');
+        btn.classList.add('text-white');
+
+        if (category === 'all') {
+          filteredServices = allServices;
+        } else {
+          filteredServices = allServices.filter(svc => svc.category === category);
+        }
+        currentPage = 1;
+        renderServices(currentPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Load more button handler
+    loadMoreBtn.addEventListener('click', () => {
+      currentPage++;
+      renderServices(currentPage);
+    });
+
+    function orderService(service_id, price) {
+      const link = prompt("Please enter the link for the order:");
+      if (!link) {
+        alert("Link is required!");
+        return;
+      }
+
+      fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          service_id: service_id,
+          link: link,
+          quantity: 1,
+          price: price
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else if (data.success) {
+          alert("Order successful!");
+          // Reload page to update balance and services buttons
+          location.reload();
+        } else {
+          alert("Unknown response from server.");
+        }
+      })
+      .catch(err => {
+        alert("Error placing the order.");
+        console.error(err);
+      });
+    }
+  </script>
+
+</body>
+</html>

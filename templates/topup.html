@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Top Up Balance | KyuzoSMM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #0e0e24, #1b0140, #0e0e24);
+      color: #eee;
+      min-height: 100vh;
+    }
+    .form-input, .form-select {
+      background-color: #1b0140;
+      border: 1px solid #5b21b6; /* purple-700 */
+      color: #eee;
+    }
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: #8b5cf6; /* purple-400 */
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.5);
+      background-color: #2e0f6f;
+      color: #fff;
+    }
+    .btn-primary {
+      background-color: #7c3aed; /* purple-600 */
+      transition: background-color 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: #6d28d9; /* purple-700 */
+    }
+    #qr-code canvas {
+      margin: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Navbar (same as dashboard) -->
+  <nav class="flex items-center justify-between px-6 py-4 bg-white/5 backdrop-blur-md border-b border-purple-700 shadow-md">
+    <div class="flex items-center space-x-3">
+      <img src="logo.png" alt="Logo" class="h-10 w-10 rounded-full shadow-lg" />
+      <span class="text-xl font-semibold text-purple-300 tracking-wider">KyuzoSMM Panel</span>
+    </div>
+    <div class="space-x-6 text-lg font-medium">
+      <a href="/dashboard" class="hover:text-purple-400 transition"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
+      <a href="/order" class="hover:text-purple-400 transition"><i class="fa fa-shopping-cart mr-1"></i>New Order</a>
+      <a href="/services" class="hover:text-purple-400 transition"><i class="fa fa-list mr-1"></i>Services</a>
+      <a href="/support" class="hover:text-purple-400 transition"><i class="fa fa-headset mr-1"></i>Support</a>
+      <a href="/logout" class="text-red-400 hover:text-red-500"><i class="fa fa-sign-out-alt mr-1"></i>Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="flex-grow max-w-md mx-auto px-6 py-12">
+    <h1 class="text-4xl font-bold text-purple-300 mb-8 text-center">Top Up Your Balance</h1>
+
+    <div class="bg-white/5 border border-purple-700 rounded-xl p-6 shadow-md backdrop-blur-md">
+      <p class="mb-4 text-purple-400 font-semibold">Current Balance:</p>
+      <p class="text-3xl font-bold mb-8 text-white">€{{ balance|round(2) }}</p>
+
+      <form id="topupForm" class="space-y-6">
+        <div>
+          <label for="amount" class="block mb-2 text-purple-300 font-semibold">Amount (EUR)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0.5"
+            max="10000"
+            id="amount"
+            name="amount"
+            value="{{ default_amount }}"
+            required
+            class="form-input w-full rounded-md px-4 py-2"
+            placeholder="Enter amount to top up"
+          />
+        </div>
+
+        <div>
+          <label for="payment-method" class="block mb-2 text-purple-300 font-semibold">Payment Method</label>
+          <select
+            id="payment-method"
+            name="payment_method"
+            class="form-select w-full rounded-md px-4 py-2"
+            required
+          >
+            <option value="crypto" selected>Cryptocurrency</option>
+            <option value="paypal">PayPal (via Discord Support)</option>
+          </select>
+        </div>
+
+        <div id="crypto-section">
+          <label for="currency" class="block mb-2 text-purple-300 font-semibold">Cryptocurrency</label>
+          <select
+            id="currency"
+            name="currency"
+            class="form-select w-full rounded-md px-4 py-2"
+          >
+            <option value="BTC" selected>Bitcoin (BTC)</option>
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="LTC">Litecoin (LTC)</option>
+            <option value="BCH">Bitcoin Cash (BCH)</option>
+            <option value="USDC">USD Coin (USDC)</option>
+          </select>
+        </div>
+
+        <div id="paypal-info" class="hidden bg-purple-900 p-4 rounded text-purple-200 text-sm">
+          <p>
+            PayPal payments are only possible via Discord.<br />
+            Please open a support ticket using the link below:
+          </p>
+          <a href="https://discord.gg/Gu7SkkVKbk" target="_blank" class="text-indigo-400 hover:text-indigo-600 underline">https://discord.gg/Gu7SkkVKbk</a>
+        </div>
+
+        <button
+          type="submit"
+          class="btn-primary w-full text-white font-semibold py-3 rounded-md shadow-md hover:shadow-lg"
+        >
+          <i class="fa fa-credit-card mr-2"></i> Generate Payment Address
+        </button>
+      </form>
+
+      <!-- Új fizetési részlet -->
+      <div id="paymentDetails" class="hidden mt-6 bg-white/10 border border-purple-600 rounded-lg p-4">
+        <p class="text-purple-300 mb-2 font-semibold">Send your crypto to this address:</p>
+        <p id="cryptoAddress" class="break-all text-white font-mono mb-4 text-lg"></p>
+        <div id="qr-code" class="mb-4"></div>
+
+        <label for="txid" class="block mb-2 text-purple-300 font-semibold">Transaction ID (TXID)</label>
+        <input
+          type="text"
+          id="txid"
+          placeholder="Enter transaction ID after payment"
+          class="form-input w-full rounded-md px-4 py-2 mb-4"
+        />
+
+        <button id="confirmPaymentBtn" class="btn-primary w-full py-3 font-semibold rounded-md shadow-md hover:shadow-lg">
+          Confirm Payment
+        </button>
+
+        <p id="successMessage" class="hidden mt-4 text-green-400 font-bold text-center text-xl">
+          &#10003; Payment Confirmed!
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    const paymentMethodSelect = document.getElementById('payment-method');
+    const cryptoSection = document.getElementById('crypto-section');
+    const paypalInfo = document.getElementById('paypal-info');
+    const form = document.getElementById('topupForm');
+    const paymentDetails = document.getElementById('paymentDetails');
+    const cryptoAddressElem = document.getElementById('cryptoAddress');
+    const qrCodeContainer = document.getElementById('qr-code');
+    const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
+    const successMessage = document.getElementById('successMessage');
+
+    // Show/hide crypto or PayPal sections
+    paymentMethodSelect.addEventListener('change', () => {
+      if(paymentMethodSelect.value === 'paypal') {
+        cryptoSection.classList.add('hidden');
+        paypalInfo.classList.remove('hidden');
+        paymentDetails.classList.add('hidden');
+      } else {
+        cryptoSection.classList.remove('hidden');
+        paypalInfo.classList.add('hidden');
+      }
+
+      // Reset UI
+      paymentDetails.classList.add('hidden');
+      cryptoAddressElem.textContent = '';
+      qrCodeContainer.innerHTML = '';
+      successMessage.classList.add('hidden');
+      document.getElementById('txid').value = '';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if(paymentMethodSelect.value === 'paypal') {
+        alert("For PayPal payments, please open a ticket via Discord support.\nLink: https://discord.gg/Gu7SkkVKbk");
+        return;
+      }
+
+      paymentDetails.classList.add('hidden');
+      cryptoAddressElem.textContent = '';
+      qrCodeContainer.innerHTML = '';
+      successMessage.classList.add('hidden');
+      document.getElementById('txid').value = '';
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('/create_charge', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          alert('Error creating charge:\n' + errorText);
+          return;
+        }
+
+        const data = await response.json();
+
+        // Várható válasz: { address: "crypto address", payment_id: "xyz" }
+        if (data.address) {
+          cryptoAddressElem.textContent = data.address;
+
+          QRCode.toCanvas(qrCodeContainer, data.address, { width: 200 }, (err) => {
+            if (err) console.error(err);
+          });
+
+          paymentDetails.classList.remove('hidden');
+
+          // Tároljuk payment_id-t az azonosításhoz
+          confirmPaymentBtn.dataset.paymentId = data.payment_id || '';
+        } else {
+          alert('Unexpected response from server: no address.');
+        }
+      } catch (error) {
+        alert('Network error: ' + error.message);
+      }
+    });
+
+    confirmPaymentBtn.addEventListener('click', async () => {
+      const txid = document.getElementById('txid').value.trim();
+      const paymentId = confirmPaymentBtn.dataset.paymentId;
+
+      if (!txid) {
+        alert('Please enter the transaction ID (TXID).');
+        return;
+      }
+
+      try {
+        const res = await fetch('/confirm_payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({ payment_id: paymentId, txid: txid })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          alert('Error confirming payment:\n' + errText);
+          return;
+        }
+
+        const result = await res.json();
+
+        if (result.success) {
+          successMessage.classList.remove('hidden');
+        } else {
+          alert('Payment not confirmed yet. Please check your TXID or wait a moment.');
+        }
+      } catch (error) {
+        alert('Network error: ' + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

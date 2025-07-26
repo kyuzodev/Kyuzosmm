@@ -1,0 +1,19 @@
+<nav class="bg-gradient-to-r from-indigo-800 to-purple-900 p-4 flex justify-between items-center">
+    <div class="text-white text-2xl font-bold">KyuzoSMM</div>
+    <div class="space-x-4">
+        <a href="/" class="text-white hover:underline">Home</a>
+        {% if session.get("username") %}
+            <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+            <a href="/order" class="text-white hover:underline">New Order</a>
+            <a href="/services" class="text-white hover:underline">Services</a>
+            <a href="/support" class="text-white hover:underline">Support</a>
+            {% if session.get("role") == "admin" %}
+                <a href="/admin" class="text-white hover:underline">Admin</a>
+            {% endif %}
+            <a href="/logout" class="text-white hover:underline">Logout</a>
+        {% else %}
+            <a href="/login" class="text-white hover:underline">Login</a>
+            <a href="/register" class="text-white hover:underline">Register</a>
+        {% endif %}
+    </div>
+</nav>

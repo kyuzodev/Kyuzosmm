@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h1>Your Orders</h1>
+
+    {% if orders %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Service ID</th>
+                <th>Link</th>
+                <th>Quantity</th>
+                <th>Rate (€)</th>
+                <th>Total Price (€)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.timestamp }}</td>
+                <td>{{ order.service_id }}</td>
+                <td>{{ order.link }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.rate }}</td>
+                <td>{{ order.price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No orders found.</p>
+    {% endif %}
+</div>
+{% endblock %}
